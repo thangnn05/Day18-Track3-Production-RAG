@@ -17,56 +17,105 @@ class RerankResult:
 
 
 class CrossEncoderReranker:
+    """
+    Cross-encoder reranker (BAAI/bge-reranker-v2-m3).
+
+    Bi-encoder (dense search) encodes query and doc independently — fast but loses
+    fine interaction. Cross-encoder feeds (query, doc) jointly through one transformer
+    pass, scoring them with full attention. We trade latency for precision: pull top-20
+    cheaply, then rerank to top-3 with the cross-encoder.
+    """
+
     def __init__(self, model_name: str = "BAAI/bge-reranker-v2-m3"):
         self.model_name = model_name
         self._model = None
 
     def _load_model(self):
         if self._model is None:
-            # TODO: Load cross-encoder model
-            # Option A: from FlagEmbedding import FlagReranker
-            #           self._model = FlagReranker(self.model_name, use_fp16=True)
-            # Option B: from sentence_transformers import CrossEncoder
-            #           self._model = CrossEncoder(self.model_name)
-            pass
+            from sentence_transformers import CrossEncoder
+            self._model = CrossEncoder(self.model_name)
         return self._model
 
-    def rerank(self, query: str, documents: list[dict], top_k: int = RERANK_TOP_K) -> list[RerankResult]:
-        """Rerank documents: top-20 → top-k."""
-        # TODO: Implement reranking
-        # 1. model = self._load_model()
-        # 2. pairs = [(query, doc["text"]) for doc in documents]
-        # 3. scores = model.compute_score(pairs)  # FlagReranker
-        #    OR scores = model.predict(pairs)      # CrossEncoder
-        # 4. Combine: [(score, doc) for score, doc in zip(scores, documents)]
-        # 5. Sort by score descending
-        # 6. Return top_k RerankResult(text=..., original_score=doc["score"],
-        #                              rerank_score=score, metadata=doc["metadata"], rank=i)
-        return []
+    def rerank(self, query: str, documents: list[dict],
+               top_k: int = RERANK_TOP_K) -> list[RerankResult]:
+        """Rerank documents: top-N → top-k by cross-encoder score."""
+        if not documents:
+            return []
+
+        model = self._load_model()
+        pairs = [(query, doc["text"]) for doc in documents]
+        scores = model.predict(pairs)
+
+        scored = list(zip(scores, documents))
+        scored.sort(key=lambda x: float(x[0]), reverse=True)
+
+        return [
+            RerankResult(
+                text=doc["text"],
+                original_score=float(doc.get("score", 0.0)),
+                rerank_score=float(score),
+                metadata=doc.get("metadata", {}),
+                rank=i,
+            )
+            for i, (score, doc) in enumerate(scored[:top_k])
+        ]
 
 
 class FlashrankReranker:
-    """Lightweight alternative (<5ms). Optional."""
+    """Lightweight alternative (<5ms). Optional — không yêu cầu cho test."""
+
     def __init__(self):
         self._model = None
 
-    def rerank(self, query: str, documents: list[dict], top_k: int = RERANK_TOP_K) -> list[RerankResult]:
-        # TODO (optional): from flashrank import Ranker, RerankRequest
-        # model = Ranker(); passages = [{"text": d["text"]} for d in documents]
-        # results = model.rerank(RerankRequest(query=query, passages=passages))
-        return []
+    def _load_model(self):
+        if self._model is None:
+            from flashrank import Ranker
+            self._model = Ranker()
+        return self._model
+
+    def rerank(self, query: str, documents: list[dict],
+               top_k: int = RERANK_TOP_K) -> list[RerankResult]:
+        if not documents:
+            return []
+        try:
+            from flashrank import RerankRequest
+            model = self._load_model()
+            passages = [{"id": i, "text": d["text"], "meta": d.get("metadata", {})}
+                        for i, d in enumerate(documents)]
+            results = model.rerank(RerankRequest(query=query, passages=passages))
+            return [
+                RerankResult(
+                    text=r["text"],
+                    original_score=float(documents[r["id"]].get("score", 0.0)),
+                    rerank_score=float(r["score"]),
+                    metadata=r.get("meta", {}),
+                    rank=i,
+                )
+                for i, r in enumerate(results[:top_k])
+            ]
+        except ImportError:
+            return []
 
 
-def benchmark_reranker(reranker, query: str, documents: list[dict], n_runs: int = 5) -> dict:
-    """Benchmark latency over n_runs."""
-    # TODO: Implement benchmark
-    # 1. times = []
-    # 2. for _ in range(n_runs):
-    #      start = time.perf_counter()
-    #      reranker.rerank(query, documents)
-    #      times.append((time.perf_counter() - start) * 1000)  # ms
-    # 3. return {"avg_ms": mean(times), "min_ms": min(times), "max_ms": max(times)}
-    return {"avg_ms": 0, "min_ms": 0, "max_ms": 0}
+def benchmark_reranker(reranker, query: str, documents: list[dict],
+                       n_runs: int = 5) -> dict:
+    """Benchmark latency over n_runs. First run includes model load — exclude it."""
+    if not documents:
+        return {"avg_ms": 0.0, "min_ms": 0.0, "max_ms": 0.0}
+
+    reranker.rerank(query, documents)  # warm-up: pay the model-load cost once
+
+    times: list[float] = []
+    for _ in range(n_runs):
+        start = time.perf_counter()
+        reranker.rerank(query, documents)
+        times.append((time.perf_counter() - start) * 1000.0)
+
+    return {
+        "avg_ms": sum(times) / len(times),
+        "min_ms": min(times),
+        "max_ms": max(times),
+    }
 
 
 if __name__ == "__main__":
@@ -79,3 +128,6 @@ if __name__ == "__main__":
     reranker = CrossEncoderReranker()
     for r in reranker.rerank(query, docs):
         print(f"[{r.rank}] {r.rerank_score:.4f} | {r.text}")
+
+    stats = benchmark_reranker(reranker, query, docs, n_runs=3)
+    print(f"\nLatency: avg={stats['avg_ms']:.1f}ms  min={stats['min_ms']:.1f}ms  max={stats['max_ms']:.1f}ms")

@@ -1,3 +1,82 @@
 [
-  {"question": "hihi cả nhà tự tạo testset bằng cơm nhé", "ground_truth": "Không kịp tạo luôn"}
+  {
+    "question": "Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân được ban hành vào ngày tháng năm nào?",
+    "ground_truth": "Nghị định 13/2023/NĐ-CP được ban hành ngày 17 tháng 4 năm 2023."
+  },
+  {
+    "question": "Dữ liệu cá nhân theo Nghị định 13/2023 bao gồm những loại nào?",
+    "ground_truth": "Dữ liệu cá nhân bao gồm dữ liệu cá nhân cơ bản và dữ liệu cá nhân nhạy cảm."
+  },
+  {
+    "question": "Những thông tin nào được coi là dữ liệu cá nhân cơ bản?",
+    "ground_truth": "Dữ liệu cá nhân cơ bản gồm họ tên, ngày sinh, giới tính, nơi sinh/cư trú, quốc tịch, hình ảnh cá nhân, số điện thoại, số CMND/CCCD, số hộ chiếu, số giấy phép lái xe, mã số thuế cá nhân, số bảo hiểm xã hội, tình trạng hôn nhân, thông tin về quan hệ gia đình và thông tin về tài khoản số."
+  },
+  {
+    "question": "Dữ liệu cá nhân nhạy cảm gồm những loại thông tin gì?",
+    "ground_truth": "Dữ liệu cá nhân nhạy cảm gồm: quan điểm chính trị, quan điểm tôn giáo; tình trạng sức khỏe và đời tư trong hồ sơ bệnh án; nguồn gốc chủng tộc, dân tộc; thông tin về di truyền; thuộc tính vật lý, đặc điểm sinh học; đời sống và xu hướng tình dục; dữ liệu về tội phạm; thông tin khách hàng của tổ chức tín dụng; dữ liệu vị trí cá nhân."
+  },
+  {
+    "question": "Chủ thể dữ liệu có những quyền cơ bản nào theo Nghị định 13/2023?",
+    "ground_truth": "Chủ thể dữ liệu có các quyền: quyền được biết, quyền đồng ý, quyền truy cập, quyền rút lại sự đồng ý, quyền xóa dữ liệu, quyền hạn chế xử lý dữ liệu, quyền cung cấp dữ liệu, quyền phản đối xử lý dữ liệu, quyền khiếu nại tố cáo khởi kiện, quyền yêu cầu bồi thường thiệt hại và quyền tự bảo vệ."
+  },
+  {
+    "question": "Khi chủ thể dữ liệu yêu cầu hạn chế xử lý dữ liệu, việc hạn chế phải được thực hiện trong thời gian bao lâu?",
+    "ground_truth": "Việc hạn chế xử lý dữ liệu phải được thực hiện trong 72 giờ sau khi có yêu cầu của chủ thể dữ liệu."
+  },
+  {
+    "question": "Sự im lặng hoặc không phản hồi của chủ thể dữ liệu có được coi là sự đồng ý không?",
+    "ground_truth": "Không. Sự im lặng hoặc không phản hồi của chủ thể dữ liệu không được coi là sự đồng ý."
+  },
+  {
+    "question": "Sự đồng ý của chủ thể dữ liệu phải được thể hiện như thế nào để có hiệu lực?",
+    "ground_truth": "Sự đồng ý phải được thể hiện rõ ràng, cụ thể bằng văn bản, giọng nói, đánh dấu vào ô đồng ý, cú pháp đồng ý qua tin nhắn, chọn các thiết lập kỹ thuật đồng ý hoặc qua một hành động khác thể hiện được điều này, ở định dạng có thể được in, sao chép."
+  },
+  {
+    "question": "Trong trường hợp tranh chấp, ai có trách nhiệm chứng minh sự đồng ý của chủ thể dữ liệu?",
+    "ground_truth": "Trong trường hợp tranh chấp, trách nhiệm chứng minh sự đồng ý của chủ thể dữ liệu thuộc về Bên Kiểm soát dữ liệu cá nhân và Bên Kiểm soát và xử lý dữ liệu cá nhân."
+  },
+  {
+    "question": "Việc xóa dữ liệu cá nhân theo yêu cầu của chủ thể dữ liệu phải được thực hiện trong thời hạn bao lâu?",
+    "ground_truth": "Việc xóa dữ liệu được thực hiện trong 72 giờ sau khi có yêu cầu của chủ thể dữ liệu."
+  },
+  {
+    "question": "Trong những trường hợp nào không cần sự đồng ý của chủ thể dữ liệu khi xử lý dữ liệu cá nhân?",
+    "ground_truth": "Không cần sự đồng ý trong các trường hợp: tình huống khẩn cấp để bảo vệ tính mạng/sức khỏe; công khai dữ liệu theo quy định của luật; cơ quan nhà nước xử lý trong tình trạng khẩn cấp về quốc phòng, an ninh, trật tự, dịch bệnh, phòng chống tội phạm; thực hiện nghĩa vụ hợp đồng; và phục vụ hoạt động của cơ quan nhà nước theo luật chuyên ngành."
+  },
+  {
+    "question": "Cơ quan nào được ghi âm, ghi hình tại nơi công cộng và xử lý dữ liệu cá nhân thu được mà không cần đồng ý của chủ thể?",
+    "ground_truth": "Cơ quan, tổ chức có thẩm quyền được ghi âm, ghi hình tại nơi công cộng với mục đích bảo vệ an ninh quốc gia, trật tự an toàn xã hội, quyền và lợi ích hợp pháp của tổ chức cá nhân, không cần sự đồng ý của chủ thể, nhưng phải thông báo để chủ thể biết mình đang bị ghi âm, ghi hình."
+  },
+  {
+    "question": "Đối tượng áp dụng của Nghị định 13/2023 gồm những ai?",
+    "ground_truth": "Nghị định áp dụng đối với cơ quan, tổ chức, cá nhân Việt Nam; cơ quan, tổ chức, cá nhân nước ngoài tại Việt Nam; cơ quan, tổ chức, cá nhân Việt Nam hoạt động tại nước ngoài; và cơ quan, tổ chức, cá nhân nước ngoài trực tiếp tham gia hoặc có liên quan đến xử lý dữ liệu cá nhân tại Việt Nam."
+  },
+  {
+    "question": "Nghĩa vụ của chủ thể dữ liệu theo Nghị định 13/2023 là gì?",
+    "ground_truth": "Chủ thể dữ liệu có nghĩa vụ tự bảo vệ dữ liệu cá nhân của mình; tôn trọng và bảo vệ dữ liệu cá nhân của người khác; cung cấp đầy đủ, chính xác dữ liệu cá nhân khi đồng ý cho phép xử lý; tham gia tuyên truyền phổ biến kỹ năng bảo vệ dữ liệu; và thực hiện quy định pháp luật về bảo vệ dữ liệu cá nhân."
+  },
+  {
+    "question": "Hành vi nào bị nghiêm cấm trong hoạt động xử lý dữ liệu cá nhân?",
+    "ground_truth": "Bị nghiêm cấm các hành vi: xử lý dữ liệu cá nhân trái pháp luật; tạo ra thông tin nhằm chống lại Nhà nước; tạo ra thông tin gây ảnh hưởng tới an ninh quốc gia, trật tự an toàn xã hội, quyền lợi ích hợp pháp của tổ chức cá nhân khác; cản trở hoạt động bảo vệ dữ liệu cá nhân của cơ quan có thẩm quyền; và lợi dụng hoạt động bảo vệ dữ liệu cá nhân để vi phạm pháp luật."
+  },
+  {
+    "question": "Vi phạm quy định bảo vệ dữ liệu cá nhân có thể bị xử lý như thế nào?",
+    "ground_truth": "Cơ quan, tổ chức, cá nhân vi phạm tùy theo mức độ có thể bị xử lý kỷ luật, xử phạt vi phạm hành chính, hoặc xử lý hình sự theo quy định pháp luật."
+  },
+  {
+    "question": "Tờ khai thuế GTGT mẫu 01/GTGT được ban hành kèm theo văn bản nào?",
+    "ground_truth": "Tờ khai thuế GTGT mẫu 01/GTGT được ban hành kèm theo Thông tư số 50/2021/TT-BTC ngày 29 tháng 9 năm 2021 của Bộ trưởng Bộ Tài chính."
+  },
+  {
+    "question": "Công ty CP DHA Surfaces có mã số thuế và kỳ tính thuế nào trên tờ khai GTGT?",
+    "ground_truth": "Công ty Cổ phần DHA Surfaces có mã số thuế 0106769437, kỳ tính thuế Quý 4 năm 2024."
+  },
+  {
+    "question": "Trên tờ khai thuế GTGT của DHA Surfaces, tổng giá trị hàng hóa dịch vụ bán ra chịu thuế suất 10% là bao nhiêu?",
+    "ground_truth": "Hàng hóa, dịch vụ bán ra chịu thuế suất 10% có giá trị 3.703.688.610 đồng và thuế GTGT tương ứng là 344.675.400 đồng."
+  },
+  {
+    "question": "Số thuế GTGT còn phải nộp trong kỳ của Công ty DHA Surfaces theo tờ khai là bao nhiêu?",
+    "ground_truth": "Thuế GTGT còn phải nộp trong kỳ là 52.133.830 đồng."
+  }
 ]
