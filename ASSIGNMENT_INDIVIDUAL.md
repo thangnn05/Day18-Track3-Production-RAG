@@ -60,19 +60,21 @@ Implement BM25 (Vietnamese) + Dense vector + RRF fusion:
 
 ### TODO trong code
 ```python
-# TODO 1: segment_vietnamese() — underthesea.word_tokenize(text, format="text")
-# TODO 2: BM25Search.index() — segment → tokenize → BM25Okapi
-# TODO 3: BM25Search.search() — segment query → get_scores → top-k
-# TODO 4: DenseSearch.index() — encode → upload PointStruct to Qdrant
-# TODO 5: DenseSearch.search() — encode query → client.search()
-# TODO 6: reciprocal_rank_fusion() — merge rankings, score = Σ 1/(k+rank)
+# DONE 1: segment_vietnamese() — underthesea.word_tokenize(text, format="text") + fallback khi thiếu package
+# DONE 2: BM25Search.index() — segment → tokenize → BM25Okapi
+# DONE 3: BM25Search.search() — segment query → get_scores → top-k
+# DONE 4: DenseSearch.index() — encode → upload PointStruct to Qdrant
+# DONE 5: DenseSearch.search() — encode query → client.search() hoặc query_points() theo version Qdrant
+# DONE 6: reciprocal_rank_fusion() — merge rankings, score = Σ 1/(k+rank)
 ```
 
 ### Test pass criteria
-- [ ] `segment_vietnamese()` trả về string khác rỗng
-- [ ] BM25 search trả về results với `method="bm25"`
-- [ ] RRF merge 2 lists → results với `method="hybrid"`
-- [ ] Query "nghỉ phép" → kết quả đầu tiên chứa "nghỉ phép"
+- [x] `segment_vietnamese()` trả về string khác rỗng
+- [x] BM25 search trả về results với `method="bm25"`
+- [x] RRF merge 2 lists → results với `method="hybrid"`
+- [x] Query "nghỉ phép" → kết quả đầu tiên chứa "nghỉ phép"
+
+**Kết quả kiểm thử:** `python -m pytest AI_ThucChien/Day18-Track3-Production-RAG/tests/test_m2.py -q` → 5 passed
 
 ---
 
