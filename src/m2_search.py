@@ -24,14 +24,14 @@ def segment_vietnamese(text: str) -> str:
     try:
         underthesea = importlib.import_module("underthesea")
         return underthesea.word_tokenize(text, format="text")
-    except ImportError:
+    except Exception:
         return text
 
 
 class BM25Search:
     def __init__(self):
-        self.corpus_tokens = []
-        self.documents = []
+        self.corpus_tokens: list[list[str]] = []
+        self.documents: list[dict] = []
         self.bm25 = None
 
     def index(self, chunks: list[dict]) -> None:
@@ -94,7 +94,6 @@ class BM25Search:
             key=lambda i: scores[i],
             reverse=True,
         )[:top_k]
-
         return [
             SearchResult(
                 text=self.documents[i]["text"],
@@ -110,13 +109,19 @@ class BM25Search:
 class DenseSearch:
     def __init__(self):
         from qdrant_client import QdrantClient
-        self.client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+        # Prefer remote Qdrant, fallback to in-memory for local runs.
+        try:
+            client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+            client.get_collections()
+            self.client = client
+        except Exception:
+            self.client = QdrantClient(":memory:")
         self._encoder = None
 
     def _get_encoder(self):
         if self._encoder is None:
             from sentence_transformers import SentenceTransformer
-            self._encoder = SentenceTransformer(EMBEDDING_MODEL)
+            self._encoder = SentenceTransformer(EMBEDDING_MODEL, trust_remote_code=True)
         return self._encoder
 
     def index(self, chunks: list[dict], collection: str = COLLECTION_NAME) -> None:
@@ -132,7 +137,7 @@ class DenseSearch:
         )
 
         texts = [chunk["text"] for chunk in chunks]
-        vectors = self._get_encoder().encode(texts, show_progress_bar=True)
+        vectors = self._get_encoder().encode(texts, show_progress_bar=True, batch_size=8)
         points = [
             qdrant_models.PointStruct(
                 id=i,
@@ -202,7 +207,7 @@ def reciprocal_rank_fusion(results_list: list[list[SearchResult]], k: int = 60,
 
 
 class HybridSearch:
-    """Combines BM25 + Dense + RRF. (Đã implement sẵn — dùng classes ở trên)"""
+    """Combines BM25 + Dense + RRF."""
     def __init__(self):
         self.bm25 = BM25Search()
         self.dense = DenseSearch()
