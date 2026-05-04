@@ -78,39 +78,6 @@ def chunk_semantic(text: str, threshold: float = SEMANTIC_THRESHOLD,
     sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+|\n\n', text) if s.strip()]
     if not sentences:
         return []
-<<<<<<< Updated upstream
-
-    chunks = []
-    try:
-        from sentence_transformers import SentenceTransformer
-        from numpy import dot
-        from numpy.linalg import norm
-
-        model = SentenceTransformer("all-MiniLM-L6-v2")
-        embeddings = model.encode(sentences)
-
-        def cosine_sim(a, b):
-            denominator = norm(a) * norm(b)
-            return dot(a, b) / denominator if denominator else 0.0
-
-        current_group = [sentences[0]]
-        for i in range(1, len(sentences)):
-            sim = cosine_sim(embeddings[i - 1], embeddings[i])
-            if sim < threshold:
-                chunks.append(Chunk(
-                    text=" ".join(current_group),
-                    metadata={**metadata, "chunk_index": len(chunks), "strategy": "semantic"}
-                ))
-                current_group = []
-            current_group.append(sentences[i])
-    except Exception:
-        current_group = sentences
-
-    if current_group:
-        chunks.append(Chunk(
-            text=" ".join(current_group),
-            metadata={**metadata, "chunk_index": len(chunks), "strategy": "semantic"}
-=======
     if len(sentences) == 1:
         return [Chunk(text=sentences[0], metadata={**metadata, "chunk_index": 0, "strategy": "semantic"})]
 
@@ -139,7 +106,6 @@ def chunk_semantic(text: str, threshold: float = SEMANTIC_THRESHOLD,
         chunks.append(Chunk(
             text=" ".join(current_group),
             metadata={**metadata, "chunk_index": len(chunks), "strategy": "semantic"},
->>>>>>> Stashed changes
         ))
     return chunks
 
@@ -156,37 +122,6 @@ def chunk_hierarchical(text: str, parent_size: int = HIERARCHICAL_PARENT_SIZE,
     """
     metadata = metadata or {}
     paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
-<<<<<<< Updated upstream
-    parents = []
-    children = []
-    current = ""
-
-    def add_parent(parent_text: str) -> None:
-        pid = f"parent_{len(parents)}"
-        parents.append(Chunk(
-            text=parent_text,
-            metadata={**metadata, "chunk_type": "parent", "parent_id": pid}
-        ))
-        for start in range(0, len(parent_text), child_size):
-            child_text = parent_text[start:start + child_size].strip()
-            if child_text:
-                children.append(Chunk(
-                    text=child_text,
-                    metadata={**metadata, "chunk_type": "child", "chunk_index": len(children)},
-                    parent_id=pid
-                ))
-
-    for para in paragraphs:
-        next_text = f"{current}\n\n{para}" if current else para
-        if len(next_text) > parent_size and current:
-            add_parent(current)
-            current = para
-        else:
-            current = next_text
-
-    if current:
-        add_parent(current)
-=======
     parents: list[Chunk] = []
     children: list[Chunk] = []
 
@@ -221,7 +156,6 @@ def chunk_hierarchical(text: str, parent_size: int = HIERARCHICAL_PARENT_SIZE,
                           "chunk_index": len(children)},
                 parent_id=pid,
             ))
->>>>>>> Stashed changes
 
     return parents, children
 
@@ -235,32 +169,6 @@ def chunk_structure_aware(text: str, metadata: dict | None = None) -> list[Chunk
     Giữ nguyên tables, code blocks, lists.
     """
     metadata = metadata or {}
-<<<<<<< Updated upstream
-    sections = re.split(r'(^#{1,3}\s+.+$)', text, flags=re.MULTILINE)
-    chunks = []
-    current_header = ""
-    current_content = ""
-
-    for part in sections:
-        if re.match(r'^#{1,3}\s+', part):
-            if current_content.strip() or current_header:
-                chunks.append(Chunk(
-                    text=f"{current_header}\n{current_content}".strip(),
-                    metadata={**metadata, "section": current_header, "strategy": "structure", "chunk_index": len(chunks)}
-                ))
-            current_header = part.strip()
-            current_content = ""
-        else:
-            current_content += part
-
-    if current_content.strip() or current_header:
-        chunks.append(Chunk(
-            text=f"{current_header}\n{current_content}".strip(),
-            metadata={**metadata, "section": current_header, "strategy": "structure", "chunk_index": len(chunks)}
-        ))
-
-    return [chunk for chunk in chunks if chunk.text]
-=======
     sections = re.split(r'(^#{1,6}\s+.+$)', text, flags=re.MULTILINE)
 
     chunks: list[Chunk] = []
@@ -295,7 +203,6 @@ def chunk_structure_aware(text: str, metadata: dict | None = None) -> list[Chunk
         flush()
 
     return chunks
->>>>>>> Stashed changes
 
 
 # ─── A/B Test: Compare All Strategies ────────────────────
@@ -311,54 +218,6 @@ def _stats(chunks: list[Chunk]) -> dict:
         "min_length": min(lengths),
         "max_length": max(lengths),
     }
-
-<<<<<<< Updated upstream
-    Returns:
-        {"basic": {...}, "semantic": {...}, "hierarchical": {...}, "structure": {...}}
-    """
-    basic_chunks = []
-    semantic_chunks = []
-    hierarchical_parents = []
-    hierarchical_children = []
-    structure_chunks = []
-
-    for doc in documents:
-        text = doc.get("text", "")
-        metadata = doc.get("metadata", {})
-        basic_chunks.extend(chunk_basic(text, metadata=metadata))
-        semantic_chunks.extend(chunk_semantic(text, metadata=metadata))
-        parents, children = chunk_hierarchical(text, metadata=metadata)
-        hierarchical_parents.extend(parents)
-        hierarchical_children.extend(children)
-        structure_chunks.extend(chunk_structure_aware(text, metadata=metadata))
-
-    def stats(chunks: list[Chunk]) -> dict:
-        lengths = [len(chunk.text) for chunk in chunks]
-        return {
-            "num_chunks": len(chunks),
-            "avg_length": sum(lengths) / len(lengths) if lengths else 0,
-            "min_length": min(lengths) if lengths else 0,
-            "max_length": max(lengths) if lengths else 0,
-        }
-
-    results = {
-        "basic": stats(basic_chunks),
-        "semantic": stats(semantic_chunks),
-        "hierarchical": {
-            "num_parents": len(hierarchical_parents),
-            "num_children": len(hierarchical_children),
-            **stats(hierarchical_children),
-        },
-        "structure": stats(structure_chunks),
-    }
-
-    print(f"{'Strategy':<14} | {'Chunks':>8} | {'Avg Len':>8} | {'Min':>5} | {'Max':>5}")
-    print("-" * 52)
-    for name, data in results.items():
-        chunks_label = f"{data['num_parents']}p/{data['num_children']}c" if name == "hierarchical" else str(data["num_chunks"])
-        print(f"{name:<14} | {chunks_label:>8} | {data['avg_length']:>8.0f} | {data['min_length']:>5} | {data['max_length']:>5}")
-
-=======
 
 def compare_strategies(documents: list[dict]) -> dict:
     """Run all strategies on documents and compare."""
@@ -389,7 +248,6 @@ def compare_strategies(documents: list[dict]) -> dict:
                         if name == "hierarchical" else str(s["num_chunks"]))
         print(f"{name:<14} | {chunks_label:>7} | {s['avg_length']:>5} | "
               f"{s['min_length']:>4} | {s['max_length']:>5}")
->>>>>>> Stashed changes
     return results
 
 

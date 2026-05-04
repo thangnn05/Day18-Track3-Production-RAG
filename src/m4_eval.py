@@ -11,82 +11,48 @@ _RAGAS_EMBEDDINGS = None
 _RAGAS_LLM = None
 
 
-def _build_ragas_metrics():
-    """Build metric objects across RAGAS versions (0.4+ and legacy)."""
-    llm = _get_ragas_llm()
-    embeddings = _get_ragas_embeddings()
-
-    # Newer RAGAS API: classes under ragas.metrics.collections.* modules.
-    try:
-        from ragas.metrics.collections.faithfulness import Faithfulness
-        from ragas.metrics.collections.answer_relevancy import AnswerRelevancy
-        from ragas.metrics.collections.context_precision import ContextPrecision
-        from ragas.metrics.collections.context_recall import ContextRecall
-
-        return [
-            Faithfulness(llm=llm),
-            AnswerRelevancy(llm=llm, embeddings=embeddings),
-            ContextPrecision(llm=llm),
-            ContextRecall(llm=llm),
-        ]
-    except Exception:
-        pass
-
-    # Legacy API: symbols may be metric classes/instances.
-    from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
-
-    metrics = [faithfulness, answer_relevancy, context_precision, context_recall]
-    normalized = []
-    for metric in metrics:
-        if isinstance(metric, type):
-            try:
-                normalized.append(metric(llm=llm, embeddings=embeddings))
-            except TypeError:
-                try:
-                    normalized.append(metric(llm=llm))
-                except TypeError:
-                    normalized.append(metric())
-        else:
-            normalized.append(metric)
-    return normalized
-
-
 def _get_ragas_embeddings():
-    """Build a local HuggingFace embedding backend for RAGAS metrics."""
+    """Build an OpenAI embedding backend with LangChain interface (embed_query/embed_documents)."""
     global _RAGAS_EMBEDDINGS
     if _RAGAS_EMBEDDINGS is None:
-        try:
-            from ragas.embeddings import HuggingFaceEmbeddings as RagasHFEmbeddings
-            _RAGAS_EMBEDDINGS = RagasHFEmbeddings(model="nomic-ai/nomic-embed-text-v1.5")
-        except Exception:
-            # Fallback: LangchainEmbeddingsWrapper (RAGAS < 0.4 style)
-            from ragas.embeddings import LangchainEmbeddingsWrapper
-            try:
-                from langchain_huggingface import HuggingFaceEmbeddings
-            except ImportError:
-                from langchain_community.embeddings import HuggingFaceEmbeddings
-            lc_embeddings = HuggingFaceEmbeddings(
-                model_name="nomic-ai/nomic-embed-text-v1.5",
-                model_kwargs={"trust_remote_code": True},
-                encode_kwargs={"normalize_embeddings": True},
-            )
-            _RAGAS_EMBEDDINGS = LangchainEmbeddingsWrapper(lc_embeddings)
+        from langchain_openai import OpenAIEmbeddings
+        _RAGAS_EMBEDDINGS = OpenAIEmbeddings(
+            model="text-embedding-3-small",
+            openai_api_key=OPENAI_API_KEY,
+        )
     return _RAGAS_EMBEDDINGS
 
 
 def _get_ragas_llm():
-    """Build an OpenAI LLM backend for RAGAS metrics (faithfulness, answer_relevancy)."""
+    """Build an OpenAI LLM backend for RAGAS metrics."""
     global _RAGAS_LLM
     if _RAGAS_LLM is None:
-        try:
-            from openai import OpenAI
-            from ragas.llms import llm_factory
-            client = OpenAI(api_key=OPENAI_API_KEY)
-            _RAGAS_LLM = llm_factory("gpt-4o-mini", client=client)
-        except Exception:
-            # Fallback: LangchainLLMWrapper (RAGAS < 0.4 style)
-            print("[m4_eval] Warning: OpenAI LLM backend not available, RAGAS metrics may be inaccurate.")
+        from openai import OpenAI
+        from ragas.llms import llm_factory
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        _RAGAS_LLM = llm_factory("gpt-4o-mini", client=client)
     return _RAGAS_LLM
+
+
+def _build_ragas_metrics():
+    """Build metric objects compatible with ragas.evaluate() (must be Metric instances)."""
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        from ragas.metrics import (
+            faithfulness, answer_relevancy, context_precision, context_recall
+        )
+
+    llm = _get_ragas_llm()
+    embeddings = _get_ragas_embeddings()
+
+    faithfulness.llm = llm
+    context_precision.llm = llm
+    context_recall.llm = llm
+    answer_relevancy.llm = llm
+    answer_relevancy.embeddings = embeddings
+
+    return [faithfulness, answer_relevancy, context_precision, context_recall]
 
 
 @dataclass
@@ -134,8 +100,6 @@ def evaluate_ragas(questions: list[str], answers: list[str],
         result = evaluate(
             dataset,
             metrics=_build_ragas_metrics(),
-            llm=_get_ragas_llm(),
-            embeddings=_get_ragas_embeddings(),
             raise_exceptions=False,
         )
         df = result.to_pandas()

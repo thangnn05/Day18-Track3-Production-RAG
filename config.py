@@ -16,8 +16,8 @@ COLLECTION_NAME = "lab18_production"
 NAIVE_COLLECTION = "lab18_naive"
 
 # --- Embedding ---
-EMBEDDING_MODEL = "BAAI/bge-m3"
-EMBEDDING_DIM = 1024
+EMBEDDING_MODEL = "nomic-ai/nomic-embed-text-v1.5"
+EMBEDDING_DIM = 768
 
 # --- Chunking ---
 HIERARCHICAL_PARENT_SIZE = 2048
